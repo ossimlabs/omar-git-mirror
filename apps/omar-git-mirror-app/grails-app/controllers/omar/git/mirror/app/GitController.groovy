@@ -8,7 +8,7 @@ class GitController {
 	def index() {
 		def json = request.JSON
 
-render "test"
-//		render gitService.mirror( json )
+
+		render gitService.mirror( json )
 	}
 }
