@@ -1,7 +1,7 @@
 buildscript {
     ext {
         grailsVersion = project.grailsVersion
-        aseImage = "omar-base"
+        baseImage = "omar-base"
     }
     if(System.env.OMAR_COMMON_PROPERTIES) {
         apply from: System.env.OMAR_COMMON_PROPERTIES
@@ -19,7 +19,7 @@ buildscript {
 }
 
 version "0.1"
-group "omar.git.mirror.app"
+group "io.ossim.omar.apps"
 
 apply plugin:"eclipse"
 apply plugin:"idea"
