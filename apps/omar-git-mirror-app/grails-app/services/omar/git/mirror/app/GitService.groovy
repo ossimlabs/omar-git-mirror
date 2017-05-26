@@ -14,9 +14,7 @@ class GitService {
         def cloneUrl = json.repository?.clone_url
         def repoName = json.repository?.name
 
-return [ cloneUrl: cloneUrl, repoName: repoName ]
-/*
-        if ( !repoName || !cloneUrl) {
+        if ( !cloneUrl || !repoName ) {
             return "No repository name or clone URL."
         }
         if ( grailsApplication.config.repos[ repoName ].cloneUrl != cloneUrl ) {
@@ -28,7 +26,7 @@ return [ cloneUrl: cloneUrl, repoName: repoName ]
         // if the repo directory doesn't exists
         if ( !repoDir.exists() ) {
             // clone the repo
-            def cloneCommand = "git clone --mirror ${ repository.clone_url }"
+            def cloneCommand = "git clone --mirror ${ cloneUrl }"
             def cloneProcess = cloneCommand.execute()
             cloneProcess.waitFor()
 
@@ -50,6 +48,5 @@ return [ cloneUrl: cloneUrl, repoName: repoName ]
 
 
         return json
-*/
     }
 }
