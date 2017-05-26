@@ -1,13 +1,15 @@
 package omar.git.mirror.app
 
 
-class HomeController {
+class GitController {
+
+	def gitService
 
 	def index() {
 		def json = request.JSON
 		println json
 
 
-		render( view: "/index.gsp" )
+		render gitService.mirror( json )
 	}
 }
