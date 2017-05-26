@@ -3,14 +3,11 @@ package omar.git.mirror.app
 
 class HomeController {
 
-	def grailsApplication
-
-
-	def index() { println params
+	def index() {
 		def json = request.JSON
 		println json
 
 
-		render "Done"
+		render( view: "/index.gsp" )
 	}
 }
