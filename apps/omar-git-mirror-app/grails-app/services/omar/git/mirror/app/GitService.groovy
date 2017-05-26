@@ -14,6 +14,8 @@ class GitService {
         def cloneUrl = json.repository?.clone_url
         def repoName = json.repository?.name
 
+return [ cloneUrl: cloneUrl, repoName: repoName ]
+/*
         if ( !repoName || !cloneUrl) {
             return "No repository name or clone URL."
         }
@@ -48,6 +50,6 @@ class GitService {
 
 
         return json
-
+*/
     }
 }
