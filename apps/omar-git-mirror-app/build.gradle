@@ -33,16 +33,18 @@ buildscript {
 
 group "io.ossim.omar.apps"
 
+apply plugin: "eclipse"
+apply plugin: "idea"
+apply plugin: "org.grails.grails-web"
+apply plugin: "org.grails.grails-gsp"
 apply plugin: "asset-pipeline"
+
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
 apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
-apply plugin: "eclipse"
-apply plugin: "idea"
+
 apply plugin: "java"
 apply plugin: "maven-publish"
-apply plugin: "org.grails.grails-web"
-apply plugin: "org.grails.grails-gsp"
 
 ext {
     grailsVersion = project.grailsVersion
