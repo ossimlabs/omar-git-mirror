@@ -196,61 +196,60 @@ if(hasJar == null)
 version "${buildVersion}-${buildVersionTag}"
 
 task logIn () {
-  doLast {
-    def login = false
-    def count = 0
-    def numRetries = 3
-    def sleepMillis = 1000
-    while(!login && count < numRetries){
-      try{
-        exec {
-          commandLine 'oc', 'login', '--insecure-skip-tls-verify', openShiftUrl,
-           '-u', openShiftUserName,
-           '-p', openShiftPassword
-        }
-        login = true
-      }
-      catch(e){
+    doLast {
+        def login = false
+        def count = 0
+        def numRetries = 3
+        def sleepMillis = 1000
+        while( !login && count < numRetries ) {
+            try {
+                exec {
+                    commandLine 'oc', 'login', '--insecure-skip-tls-verify', openShiftUrl,
+                    '-u', openShiftUserName,
+                    '-p', openShiftPassword
+                }
+                login = true
+            }
+            catch( e ) {
 
-        println 'Openshift login failed!'
-        count++
-        if(count < numRetries){
-          Thread.sleep(sleepMillis)
+            println 'Openshift login failed!'
+            count++
+            if( count < numRetries ) {
+                Thread.sleep(sleepMillis)
+            }
+            else {
+                throw( e )
+            }
         }
-        else {
-          throw(e)
-        }
-      }
     }
 
     def loginTokenStream = new ByteArrayOutputStream()
     exec {
-      commandLine 'oc', 'whoami', '-t'
-      standardOutput loginTokenStream
+        commandLine 'oc', 'whoami', '-t'
+        standardOutput loginTokenStream
     }
 
-    def loginToken = new String(loginTokenStream.toByteArray(), 'UTF-8')?.trim()
-    println loginToken
-    exec {
-     commandLine 'docker', 'login', '-p', loginToken, '-u', 'unused', dockerRegistryUrl
+        def loginToken = new String(loginTokenStream.toByteArray(), 'UTF-8')?.trim()
+        println loginToken
+        exec {
+            commandLine 'docker', 'login', '-p', loginToken, '-u', 'unused', dockerRegistryUrl
+        }
     }
-  }
 }
 
 
 task downloadBaseImage(type:com.github.skhatri.s3aws.plugin.S3DownloadTask) {
-  bucket = "o2-delivery/${gitBranch}/docker"
-  key = "${lazyProperty('baseImage')}.tgz"
-  saveTo = file("${dockerFile.parentFile}/${lazyProperty('baseImage')}.tgz")
+    bucket = "o2-delivery/${ gitBranch }/docker"
+    key = "${ lazyProperty( 'baseImage' ) }.tgz"
+    saveTo = file("${ dockerFile.parentFile }/${ lazyProperty( 'baseImage' ) }.tgz")
 }
 
-task loadBaseDockerImage(dependsOn: downloadBaseImage) {
-
-  doLast {
-    exec {
-      commandLine 'docker', 'load', '-i', "${dockerFile.parentFile}/${lazyProperty('baseImage')}.tgz"
+task loadBaseDockerImage( dependsOn: downloadBaseImage ) {
+    doLast {
+        exec {
+            commandLine "docker", "load", "-i", "${ dockerFile.parentFile }/${ lazyProperty( 'baseImage' ) }.tgz"
+        }
     }
-  }
 }
 
 task createDockerfile( type: Dockerfile ) {
@@ -277,10 +276,10 @@ task createDockerfile( type: Dockerfile ) {
         runCommand "chown -R 1001:0 /usr/share/omar"
         runCommand "chown 1001:0 /usr/share/omar"
         runCommand "chmod -R g+rw /usr/share/omar"
-        runCommand "find $HOME -type d -exec chmod g+x {} +""
+        runCommand "find $HOME -type d -exec chmod g+x {} +"
 
         user "1001"
-        workingDir ""/usr/share/omar"
+        workingDir "/usr/share/omar"
         instruction "expose 8080"
         defaultCommand "java", "-server", "-Xms256m", "-Xmx1024m", "-Djava.awt.headless=true", "-XX:+CMSClassUnloadingEnabled", "-XX:+UseGCOverheadLimit", "-Djava.security.egd=file:/dev/./urandom", "-jar", jarName
     }
