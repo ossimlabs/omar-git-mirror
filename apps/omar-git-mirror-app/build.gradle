@@ -109,29 +109,23 @@ def lazyProperty(final String propertyName) {
     // Get property.
     def result
     def propertyValue
-    if(project.ext.has(propertyName))
-    {
-      propertyValue = project.ext."${propertyName}"
+    if( project.ext.has( propertyName ) ) {
+        propertyValue = project.ext."${ propertyName }"
     }
-    else if(project.hasProperty(propertyName))
-    {
-      propertyValue = project.ext."${propertyName}"
+    else if( project.hasProperty( propertyName ) ) {
+      propertyValue = project.ext."${ propertyName }"
     }
-    if(propertyValue)
-    {
-      // Check for type of property to see if we can
-      // run it as a Closure.
-      if (propertyValue instanceof Closure)
-      {
-          // Invoke Closure to calculate the value.
-          result = propertyValue()
-      }
-      else
-      {
-          // Return value as-is.
-          result = propertyValue
-      }
-
+    if( propertyValue ) {
+        // Check for type of property to see if we can
+        // run it as a Closure.
+        if ( propertyValue instanceof Closure ) {
+            // Invoke Closure to calculate the value.
+            result = propertyValue()
+        }
+        else {
+            // Return value as-is.
+            result = propertyValue
+        }
     }
     result
 }
@@ -259,58 +253,55 @@ task loadBaseDockerImage(dependsOn: downloadBaseImage) {
   }
 }
 
-task createDockerfile(type: Dockerfile){
+task createDockerfile( type: Dockerfile ) {
+    def statementOverride = lazyProperty( "dockerStatementsOverride" );
+    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
+    destFile = dockerFile
 
-  def statementOverride = lazyProperty("dockerStatementsOverride");
-
-  def jarName = "${project.name}-${buildVersion}-${buildVersionTag}.jar"
-  destFile = dockerFile
-
-  if(statementOverride)
-  {
-    statementOverride.each{
-      instruction it
+    if( statementOverride ) {
+        statementOverride.each {
+            instruction it
+        }
     }
-  }
-  else
-  {
-      from "${lazyProperty('dockerNamespaceUrl')}${lazyProperty('baseImage')}:${lazyProperty('dockerAppTag')}"
-      maintainer "DigitalGlobe-RadiantBlue"
-      environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
-      environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
-      runCommand "mkdir /.ssh"
-      runCommand "mkdir /usr/share/omar"
-      copyFile jarName, '/usr/share/omar'
-      runCommand 'chown -R 1001:0 /usr/share/omar'
-      runCommand 'chown 1001:0 /usr/share/omar'
-      runCommand 'chmod -R g+rw /usr/share/omar'
-      runCommand 'find $HOME -type d -exec chmod g+x {} +'
-      user '1001'
-      workingDir '/usr/share/omar'
-      instruction "expose 8080"
-      defaultCommand 'java', '-server', '-Xms256m', '-Xmx1024m', '-Djava.awt.headless=true', '-XX:+CMSClassUnloadingEnabled', '-XX:+UseGCOverheadLimit', '-Djava.security.egd=file:/dev/./urandom', '-jar', jarName
-  }
+    else {
+        from "${ lazyProperty( 'dockerNamespaceUrl' ) }${ lazyProperty( 'baseImage' ) }:${ lazyProperty( 'dockerAppTag' ) }"
+        maintainer "DigitalGlobe-RadiantBlue"
+        environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
+        environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
+
+        runCommand "mkdir /.ssh"
+        runCommand "chown 1001:0 /.ssh"
+
+        runCommand "mkdir /usr/share/omar"
+        copyFile jarName, ""/usr/share/omar"
+        runCommand "chown -R 1001:0 /usr/share/omar"
+        runCommand "chown 1001:0 /usr/share/omar"
+        runCommand "chmod -R g+rw /usr/share/omar"
+        runCommand "find $HOME -type d -exec chmod g+x {} +""
+
+        user "1001"
+        workingDir ""/usr/share/omar"
+        instruction "expose 8080"
+        defaultCommand "java", "-server", "-Xms256m", "-Xmx1024m", "-Djava.awt.headless=true", "-XX:+CMSClassUnloadingEnabled", "-XX:+UseGCOverheadLimit", "-Djava.security.egd=file:/dev/./urandom", "-jar", jarName
+    }
 }
 
-task buildDockerImage(type: DockerBuildImage) {
-  dependsOn createDockerfile
-  dependsOn logIn
-  inputDir = createDockerfile.destFile.parentFile
-  tag = "${image}"
+task buildDockerImage( type: DockerBuildImage ) {
+    dependsOn createDockerfile
+    dependsOn logIn
+    inputDir = createDockerfile.destFile.parentFile
+    tag = "${ image }"
 }
 
-task tagDockerImage(type: DockerTagImage, dependsOn: buildDockerImage){
-  imageId "${image}"
-  tag "${dockerAppTag}"
-  repository  "${dockerNamespaceUrl}${project.name}"
+task tagDockerImage( type: DockerTagImage, dependsOn: buildDockerImage ) {
+    imageId "${ image }"
+    tag "${ dockerAppTag }"
+    repository  "${ dockerNamespaceUrl }${ project.name }"
 }
 
-
-task pushDockerImage(type: DockerPushImage){
-
-  dependsOn tagDockerImage
-
-  imageName "${dockerNamespaceUrl}${image}"
+task pushDockerImage( type: DockerPushImage ) {
+    dependsOn tagDockerImage
+    imageName "${ dockerNamespaceUrl }${ image }"
 }
 
 task saveDockerImage(dependsOn: pushDockerImage) {
@@ -328,66 +319,65 @@ task dockerImageToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, depends
   file = ("${dockerFile.parentFile}/${imageTgz}").toString()
 }
 
-task dockerFileToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: createDockerfile) {
-  bucket = "o2-delivery/${gitBranch}/docker"
-  key = "${project.name}-Dockerfile"
-  file = createDockerfile.destFile.toString()
+task dockerFileToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: createDockerfile ) {
+    bucket = "o2-delivery/${ gitBranch }/docker"
+    key = "${ project.name }-Dockerfile"
+    file = createDockerfile.destFile.toString()
 }
 
-task jarFileToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask) {
-  def jarName = "${project.name}-${buildVersion}-${buildVersionTag}.jar"
-  bucket = "o2-delivery/${gitBranch}/jars"
-  key = "${jarName}"
-  file = "build/libs/${jarName}"
+task jarFileToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask ) {
+    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
+    bucket = "o2-delivery/${ gitBranch }/jars"
+    key = "${ jarName }"
+    file = "build/libs/${ jarName }"
 }
 
 task doAll() {
-  dependsOn dockerImageToS3
-  dependsOn dockerFileToS3
+    dependsOn dockerImageToS3
+    dependsOn dockerFileToS3
 
-  doLast{
-    exec {
-      // Removes the image that is pushed to the remote repository
-      // from the local Docker registry
-      commandLine 'docker', 'rmi', "-f", "${dockerNamespaceUrl}${image}"
+    doLast {
+        exec {
+            // Removes the image that is pushed to the remote repository
+            // from the local Docker registry
+            commandLine 'docker', 'rmi', "-f", "${dockerNamespaceUrl}${image}"
+        }
+        exec {
+            // Removes the default image created during the build process from
+            // from the local Docker registry
+            commandLine 'docker', 'rmi', "-f", image
+        }
     }
-    exec {
-      // Removes the default image created during the build process from
-      // from the local Docker registry
-      commandLine 'docker', 'rmi', "-f", image
-    }
-  }
 }
 
 artifactory {
-  contextUrl = "${artifactoryContextUrl}"   //The base Artifactory URL if not overridden by the publisher/resolver
-  publish {
-    repository {
-      repoKey = "omar-local"
-      username = "${artifactoryUser}"
-      password = "${artifactoryPassword}"
-      maven = true
+    contextUrl = "${ artifactoryContextUrl }"   //The base Artifactory URL if not overridden by the publisher/resolver
+    publish {
+        repository {
+            repoKey = "omar-local"
+            username = "${ artifactoryUser }"
+            password = "${ artifactoryPassword }"
+            maven = true
+        }
+        defaults {
+            publications( "mavenJava" )
+        }
     }
-    defaults{
-      publications("mavenJava")
+    resolve {
+        repository {
+            repoKey = "omar-local"
+            username = "${ artifactoryUser }"
+            password = "${ artifactoryPassword }"
+            maven = true
+        }
     }
-  }
-  resolve {
-    repository {
-      repoKey = "omar-local"
-      username = "${artifactoryUser}"
-      password = "${artifactoryPassword}"
-      maven = true
-    }
-  }
-}
-if(fullAssemble)
-{
-  artifactoryPublish.dependsOn.add("assemble")
-  jarFileToS3.dependsOn.add("assemble")
 }
 
-if( hasJar )
-{
-  doAll.dependsOn.add("jarFileToS3")
+if( fullAssemble ) {
+    artifactoryPublish.dependsOn.add( "assemble" )
+    jarFileToS3.dependsOn.add( "assemble" )
+}
+
+if( hasJar ) {
+    doAll.dependsOn.add( "jarFileToS3" )
 }
