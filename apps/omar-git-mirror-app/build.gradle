@@ -169,31 +169,26 @@ ext {
 }
 
 Boolean fullAssemble = lazyProperty('fullAssemble')
-if(fullAssemble == null)
-{
-  String projName = "${project.name}"
-  fullAssemble = true;
-  if(projName.contains("-plugin"))
-  {
-    fullAssemble = false
-  }
+if( fullAssemble == null ) {
+    String projName = "${ project.name }"
+    fullAssemble = true;
+    if( projName.contains( "-plugin" ) ) {
+        fullAssemble = false
+    }
 }
-def dockerFile = lazyProperty('dockerFile')
-if(!dockerFile)
-{
-  dockerFile = project.file('build/libs/Dockerfile')
+def dockerFile = lazyProperty( 'dockerFile' )
+if( !dockerFile ) {
+    dockerFile = project.file('build/libs/Dockerfile')
 }
-else
-{
-  dockerFile = project.file(dockerFile)
+else {
+    dockerFile = project.file( dockerFile )
 }
 
-Boolean hasJar = lazyProperty('hasJar')
-if(hasJar == null)
-{
-  hasJar = true
+Boolean hasJar = lazyProperty( 'hasJar' )
+if(hasJar == null) {
+    hasJar = true
 }
-version "${buildVersion}-${buildVersionTag}"
+version "${ buildVersion }-${ buildVersionTag }"
 
 task logIn () {
     doLast {

@@ -13,12 +13,12 @@ class BootStrap {
 
         def id_rsa = new File( "${ sshDirectory }/id_rsa" )
         if ( !id_rsa.exists() ) {
-//            id_rsa.write( grailsApplication.config.sshKey )
+            id_rsa.write( grailsApplication.config.sshKey )
         }
 
         def id_rsa_pub = new File( "${ sshDirectory }/id_rsa.pub" )
         if ( !id_rsa_pub.exists() ) {
-//            id_rsa_pub.write( grailsApplication.config.sshKeyPublic )
+            id_rsa_pub.write( grailsApplication.config.sshKeyPublic )
         }
     }
     def destroy = {
