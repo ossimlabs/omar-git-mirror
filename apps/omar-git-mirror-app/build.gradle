@@ -275,7 +275,7 @@ task createDockerfile( type: Dockerfile ) {
         runCommand "chmod -R g+rw /usr/share/omar"
         runCommand 'find $HOME -type d -exec chmod g+x {} +'
 
-        //runCommand "useradd -ms /bin/bash 1001"
+        runCommand "useradd -ms /bin/bash 1001"
 
         user "1001"
         workingDir "/usr/share/omar"
