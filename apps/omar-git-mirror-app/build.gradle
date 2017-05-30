@@ -24,6 +24,7 @@ group "io.ossim.omar.apps"
 
 apply plugin:"eclipse"
 apply plugin:"idea"
+apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 apply plugin:"org.grails.grails-web"
 apply plugin:"org.grails.grails-gsp"
 apply plugin:"asset-pipeline"
