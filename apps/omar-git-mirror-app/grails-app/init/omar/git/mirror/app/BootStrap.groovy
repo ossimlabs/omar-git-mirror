@@ -14,11 +14,22 @@ class BootStrap {
         def id_rsa = new File( "${ sshDirectory }/id_rsa" )
         if ( !id_rsa.exists() ) {
             id_rsa.write( grailsApplication.config.sshKey )
+            "chmod 600 ${ id_rsa }".execute()
         }
 
         def id_rsa_pub = new File( "${ sshDirectory }/id_rsa.pub" )
         if ( !id_rsa_pub.exists() ) {
             id_rsa_pub.write( grailsApplication.config.sshKeyPublic )
+            "chmod 644 ${ id_rsa_pub }".execute()
+        }
+
+        def config = new File( "${ sshDirectory }/config" )
+        if ( !config.exists() ) {
+            config.append( "Host github.com" )
+            config.append( "StrictHostKeyChecking no" )
+            config.append( "Host ${ grailsApplication.config.knownHost }" )
+            config.append( "StrictHostKeyChecking no" )
+
         }
     }
     def destroy = {
