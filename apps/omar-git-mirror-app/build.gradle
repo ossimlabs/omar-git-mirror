@@ -1,108 +1,39 @@
+import com.bmuschko.gradle.docker.tasks.image.Dockerfile
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
-import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-
 
 buildscript {
-    ext {
-        grailsVersion = project.grailsVersion
-        baseImage = "omar-base"
+  ext {
+    grailsVersion = ""
+    baseImage = "omar-base"
+    if(System.env.OMAR_COMMON_PROPERTIES)
+    {
+      apply from: System.env.OMAR_COMMON_PROPERTIES
     }
-    if( System.env.OMAR_COMMON_PROPERTIES ) {
-        apply from: System.env.OMAR_COMMON_PROPERTIES
-    }
-    repositories {
-        mavenLocal()
-        maven { url "${ ossimMavenProxy }" }
-        maven { url "https://repo.grails.org/grails/core" }
-    }
-    dependencies {
-        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
-        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.8.2"
-        classpath "org.grails.plugins:hibernate4:5.0.10"
+  }
+  repositories {
+    mavenLocal()
+    maven { url "${ossimMavenProxy}" }
+  }
+  dependencies {
         classpath 'com.bmuschko:gradle-docker-plugin:3.0.6'
         classpath 'com.github.skhatri:gradle-s3-plugin:1.0.4'
         classpath "org.jfrog.buildinfo:build-info-extractor-gradle:latest.release"
-    }
+  }
 }
-
-
+apply plugin: "eclipse"
+apply plugin: "idea"
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
 apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
 
-group "io.ossim.omar.apps"
-
-apply plugin:"eclipse"
-apply plugin:"idea"
-apply plugin:"org.grails.grails-web"
-apply plugin:"org.grails.grails-gsp"
-apply plugin:"asset-pipeline"
-
 apply plugin: "java"
 apply plugin: "maven-publish"
 
-ext {
-    grailsVersion = project.grailsVersion
-    gradleWrapperVersion = project.gradleWrapperVersion
-}
-
-repositories {
-    mavenLocal()
-    maven { url "${ ossimMavenProxy }" }
-    maven { url "https://repo.grails.org/grails/core" }
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.grails:grails-bom:$grailsVersion"
-        mavenBom "org.springframework.cloud:spring-cloud-starter-parent:Brixton.SR7"
-    }
-    applyMavenExclusions false
-}
-
-dependencies {
-    compile "org.springframework.boot:spring-boot-starter-logging"
-    compile "org.springframework.boot:spring-boot-autoconfigure"
-    compile "org.grails:grails-core"
-    compile "org.springframework.boot:spring-boot-starter-actuator"
-    compile "org.springframework.boot:spring-boot-starter-tomcat"
-    compile "org.grails:grails-dependencies"
-    compile "org.grails:grails-web-boot"
-    compile "org.grails.plugins:cache"
-    compile "org.grails.plugins:scaffolding"
-    compile "org.grails.plugins:hibernate4"
-    compile "org.hibernate:hibernate-ehcache"
-    console "org.grails:grails-console"
-    profile "org.grails.profiles:web"
-    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.8.2"
-    runtime "com.h2database:h2"
-    testCompile "org.grails:grails-plugin-testing"
-    testCompile "org.grails.plugins:geb"
-    testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
-    testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
-
-    compile "org.springframework.cloud:spring-cloud-starter-config"
-    compile "org.springframework.cloud:spring-cloud-starter-eureka"
-}
-
-assets {
-    minifyJs = true
-    minifyCss = true
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-}
-
-task createDockerfile( overwrite: true ) {
-    //def destFile = project.file( 'docker/Dockerfile' )
+task createDockerfile(type: Dockerfile, overwrite:true){
+    destFile = project.file( 'docker/Dockerfile' )
 
     def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
 
@@ -122,3 +53,207 @@ task createDockerfile( overwrite: true ) {
     instruction "expose 8080"
     defaultCommand 'java', '-server', '-Xms256m', '-Xmx1024m', '-Djava.awt.headless=true', '-XX:+CMSClassUnloadingEnabled', '-XX:+UseGCOverheadLimit', '-Djava.security.egd=file:/dev/./urandom', '-jar', jarName
 }
+
+task buildDockerImage(type: DockerBuildImage, overwrite:true) {
+  dependsOn createDockerfile
+  inputDir = createDockerfile.destFile.parentFile
+  tag = "${image}"
+}
+task tagDockerImage(type: DockerTagImage, dependsOn: buildDockerImage, overwrite:true) {
+  imageId "${image}"
+  tag "${dockerAppTag}"
+  repository  "${dockerNamespaceUrl}${project.name}"
+}
+
+task pushDockerImage(type: DockerPushImage, overwrite:true){
+  dependsOn logIn
+  dependsOn tagDockerImage
+
+  imageName "${dockerNamespaceUrl}${image}"
+}
+
+task saveDockerImage(dependsOn: pushDockerImage, overwrite:true) {
+  doLast {
+    exec {
+      commandLine 'docker', 'save', image, '-o', "${project.name}.tgz"
+    }
+  }
+}
+
+task pushDocsToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, overwrite: true) {
+    exec {
+        commandLine "aws", "s3", "sync", "../../site", "s3://ossimlabs/omar-docs-${ System.getenv( 'OSSIM_GIT_BRANCH' ) }"
+    }
+
+    bucket = "o2-delivery/dev/o2-install-guide"
+    key = "docs.tgz"
+    file = "../../docs.tgz"
+}
+
+// Uses the S3 plugin to push the .tgz file to the ossimlabs
+task dockerImageToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: saveDockerImage, overwrite:true) {
+  dependsOn pushDocsToS3
+
+  bucket = 'o2-delivery/dev/docker'
+  key = "${imageTgz}"
+  file = project.file("${imageTgz}").toString()
+}
+
+task doAll(dependsOn: dockerImageToS3, overwrite:true) {
+  doLast{
+    exec {
+      // Removes the image that is pushed to the remote repository
+      // from the local Docker registry
+      commandLine 'docker', 'rmi', "-f", "${dockerNamespaceUrl}${image}"
+    }
+    exec {
+      // Removes the default image created during the build process from
+      // from the local Docker registry
+      commandLine 'docker', 'rmi', "-f", image
+    }
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//buildscript {
+//    ext {
+//        grailsVersion = project.grailsVersion
+//        baseImage = "omar-base"
+//    }
+//    if( System.env.OMAR_COMMON_PROPERTIES ) {
+//        apply from: System.env.OMAR_COMMON_PROPERTIES
+//    }
+//    repositories {
+//        mavenLocal()
+//        maven { url "${ ossimMavenProxy }" }
+//        maven { url "https://repo.grails.org/grails/core" }
+//    }
+//    dependencies {
+//        classpath "org.grails:grails-gradle-plugin:$grailsVersion"
+//        classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.8.2"
+//        classpath "org.grails.plugins:hibernate4:5.0.10"
+//        classpath 'com.bmuschko:gradle-docker-plugin:3.0.6'
+//        classpath 'com.github.skhatri:gradle-s3-plugin:1.0.4'
+//        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:latest.release"
+//    }
+//}
+//
+//
+//apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+//apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
+//apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
+//
+//group "io.ossim.omar.apps"
+//
+//apply plugin:"eclipse"
+//apply plugin:"idea"
+//apply plugin:"org.grails.grails-web"
+//apply plugin:"org.grails.grails-gsp"
+//apply plugin:"asset-pipeline"
+//
+//apply plugin: "java"
+//apply plugin: "maven-publish"
+//
+//ext {
+//    grailsVersion = project.grailsVersion
+//    gradleWrapperVersion = project.gradleWrapperVersion
+//}
+//
+//repositories {
+//    mavenLocal()
+//    maven { url "${ ossimMavenProxy }" }
+//    maven { url "https://repo.grails.org/grails/core" }
+//}
+//
+//dependencyManagement {
+//    imports {
+//        mavenBom "org.grails:grails-bom:$grailsVersion"
+//        mavenBom "org.springframework.cloud:spring-cloud-starter-parent:Brixton.SR7"
+//    }
+//    applyMavenExclusions false
+//}
+//
+//dependencies {
+//    compile "org.springframework.boot:spring-boot-starter-logging"
+//    compile "org.springframework.boot:spring-boot-autoconfigure"
+//    compile "org.grails:grails-core"
+//    compile "org.springframework.boot:spring-boot-starter-actuator"
+//    compile "org.springframework.boot:spring-boot-starter-tomcat"
+//    compile "org.grails:grails-dependencies"
+//    compile "org.grails:grails-web-boot"
+//    compile "org.grails.plugins:cache"
+//    compile "org.grails.plugins:scaffolding"
+//    compile "org.grails.plugins:hibernate4"
+//    compile "org.hibernate:hibernate-ehcache"
+//    console "org.grails:grails-console"
+//    profile "org.grails.profiles:web"
+//    runtime "com.bertramlabs.plugins:asset-pipeline-grails:2.8.2"
+//    runtime "com.h2database:h2"
+//    testCompile "org.grails:grails-plugin-testing"
+//    testCompile "org.grails.plugins:geb"
+//    testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
+//    testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
+//
+//    compile "org.springframework.cloud:spring-cloud-starter-config"
+//    compile "org.springframework.cloud:spring-cloud-starter-eureka"
+//}
+//
+//assets {
+//    minifyJs = true
+//    minifyCss = true
+//}
+//
+//publishing {
+//    publications {
+//        mavenJava(MavenPublication) {
+//            from components.java
+//        }
+//    }
+//}
+//
+//task createDockerfile( overwrite: true ) {
+//    //def destFile = project.file( 'docker/Dockerfile' )
+//
+//    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
+//
+//    from "${ project.dockerNamespaceUrl }${ project.ext.baseImage }:${ project.dockerAppTag }"
+//    maintainer "DigitalGlobe-RadiantBlue"
+//    environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
+//    environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
+//    runCommand "mkdir /.ssh"
+//    runCommand "mkdir /usr/share/omar"
+//    copyFile jarName, '/usr/share/omar'
+//    runCommand 'chown -R 1001:0 /usr/share/omar'
+//    runCommand 'chown 1001:0 /usr/share/omar'
+//    runCommand 'chmod -R g+rw /usr/share/omar'
+//    runCommand 'find $HOME -type d -exec chmod g+x {} +'
+//    user '1001'
+//    workingDir '/usr/share/omar'
+//    instruction "expose 8080"
+//    defaultCommand 'java', '-server', '-Xms256m', '-Xmx1024m', '-Djava.awt.headless=true', '-XX:+CMSClassUnloadingEnabled', '-XX:+UseGCOverheadLimit', '-Djava.security.egd=file:/dev/./urandom', '-jar', jarName
+//}
