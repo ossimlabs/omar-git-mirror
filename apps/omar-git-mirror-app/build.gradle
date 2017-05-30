@@ -273,7 +273,7 @@ task createDockerfile( type: Dockerfile ) {
         runCommand "chown 1001:0 /.ssh"
 
         runCommand "mkdir /usr/share/omar"
-        copyFile jarName, ""/usr/share/omar"
+        copyFile jarName, "/usr/share/omar"
         runCommand "chown -R 1001:0 /usr/share/omar"
         runCommand "chown 1001:0 /usr/share/omar"
         runCommand "chmod -R g+rw /usr/share/omar"
@@ -304,19 +304,19 @@ task pushDockerImage( type: DockerPushImage ) {
     imageName "${ dockerNamespaceUrl }${ image }"
 }
 
-task saveDockerImage(dependsOn: pushDockerImage) {
-  doLast {
-    exec {
-      commandLine 'docker', 'save', image, '-o', "${dockerFile.parentFile}/${project.name}.tgz"
+task saveDockerImage( dependsOn: pushDockerImage ) {
+    doLast {
+        exec {
+            commandLine "docker", "save", image, "-o", "${ dockerFile.parentFile }/${ project.name }.tgz"
+        }
     }
-  }
 }
 
 // Uses the S3 plugin to push the .tgz file to the ossimlabs
-task dockerImageToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: saveDockerImage) {
-  bucket = "o2-delivery/${gitBranch}/docker"
-  key = "${imageTgz}"
-  file = ("${dockerFile.parentFile}/${imageTgz}").toString()
+task dockerImageToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: saveDockerImage ) {
+    bucket = "o2-delivery/${ gitBranch }/docker"
+    key = "${ imageTgz }"
+    file = ("${ dockerFile.parentFile }/${ imageTgz }").toString()
 }
 
 task dockerFileToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: createDockerfile ) {
