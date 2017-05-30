@@ -1,15 +1,7 @@
-import com.bmuschko.gradle.docker.tasks.image.Dockerfile
-import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
-import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
-import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
-
 buildscript {
     ext {
         grailsVersion = project.grailsVersion
         baseImage = "omar-base"
-        artifactoryContextUrl="https://artifacts.radiantbluecloud.com/artifactory"
-        ossimMavenProxy="${artifactoryContextUrl}/ossim-deps"
     }
     if( System.env.OMAR_COMMON_PROPERTIES ) {
         apply from: System.env.OMAR_COMMON_PROPERTIES
@@ -25,11 +17,6 @@ buildscript {
         classpath "org.grails.plugins:hibernate4:5.0.10"
     }
 }
-
-
-apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
-apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
-apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
 
 group "io.ossim.omar.apps"
 
@@ -99,181 +86,12 @@ publishing {
     }
 }
 
-apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
-apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
-apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
+task createDockerfile( type: Dockerfile, overwrite:true ) {
+    destFile = project.file( 'docker/Dockerfile' )
 
-def lazyProperty(final String propertyName) {
-    // Get property.
-    def result
-    def propertyValue
-    if(project.ext.has(propertyName))
-    {
-      propertyValue = project.ext."${propertyName}"
-    }
-    else if(project.hasProperty(propertyName))
-    {
-      propertyValue = project.ext."${propertyName}"
-    }
-    if(propertyValue)
-    {
-      // Check for type of property to see if we can
-      // run it as a Closure.
-      if (propertyValue instanceof Closure)
-      {
-          // Invoke Closure to calculate the value.
-          result = propertyValue()
-      }
-      else
-      {
-          // Return value as-is.
-          result = propertyValue
-      }
+    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
 
-    }
-    result
-}
-
-
-
-def getCurrentGitBranch() {
-    def gitBranch = "Unknown branch"
-    try {
-        def workingDir = new File("${project.projectDir}")
-        def result = 'git rev-parse --abbrev-ref HEAD'.execute(null, workingDir)
-        result.waitFor()
-        if (result.exitValue() == 0) {
-            gitBranch = result.text.trim()
-        }
-    } catch (e) {
-    }
-    return gitBranch
-}
-def gitBranch=getCurrentGitBranch()
-
-ext {
-  buildVersionTag=gitBranch=="dev"?"SNAPSHOT":"RELEASE"//"SNAPSHOT" // SNAPSHOT or RELEASE
-  jarArtifactsChanging="${buildVersionTag}" == "SNAPSHOT" ? true:false
-  artifactoryUser="${System.env.ARTIFACTORY_USER}"
-  artifactoryPassword="${System.env.ARTIFACTORY_PASSWORD}"
-
-  openShiftUrl="https://openshift-master.ossim.io:8443"
-  yumTag=(buildVersionTag=="SNAPSHOT"?"dev":"master")
-  dockerAppTag=(buildVersionTag=="SNAPSHOT"?"latest":"release")
-  dockerRegistryUrl="docker-registry-default.ossim.io"
-  registryProjectName="o2"
-  openShiftUserName="${System.env.OPENSHIFT_USERNAME}"
-  openShiftPassword="${System.env.OPENSHIFT_PASSWORD}"
-  dockerNamespaceUrl = "${dockerRegistryUrl}/${registryProjectName}/"
-
-  image = "${project.name}:${dockerAppTag}"
-  imageTgz = "${project.name}.tgz"
-
-  installOssim = true
-}
-
-Boolean fullAssemble = lazyProperty('fullAssemble')
-if(fullAssemble == null)
-{
-  String projName = "${project.name}"
-  fullAssemble = true;
-  if(projName.contains("-plugin"))
-  {
-    fullAssemble = false
-  }
-}
-def dockerFile = lazyProperty('dockerFile')
-if(!dockerFile)
-{
-  dockerFile = project.file('build/libs/Dockerfile')
-}
-else
-{
-  dockerFile = project.file(dockerFile)
-}
-
-Boolean hasJar = lazyProperty('hasJar')
-if(hasJar == null)
-{
-  hasJar = true
-}
-version "${buildVersion}-${buildVersionTag}"
-
-task logIn () {
-  doLast {
-    def login = false
-    def count = 0
-    def numRetries = 3
-    def sleepMillis = 1000
-    while(!login && count < numRetries){
-      try{
-        exec {
-          commandLine 'oc', 'login', '--insecure-skip-tls-verify', openShiftUrl,
-           '-u', openShiftUserName,
-           '-p', openShiftPassword
-        }
-        login = true
-      }
-      catch(e){
-
-        println 'Openshift login failed!'
-        count++
-        if(count < numRetries){
-          Thread.sleep(sleepMillis)
-        }
-        else {
-          throw(e)
-        }
-      }
-    }
-
-    def loginTokenStream = new ByteArrayOutputStream()
-    exec {
-      commandLine 'oc', 'whoami', '-t'
-      standardOutput loginTokenStream
-    }
-
-    def loginToken = new String(loginTokenStream.toByteArray(), 'UTF-8')?.trim()
-    println loginToken
-    exec {
-     commandLine 'docker', 'login', '-p', loginToken, '-u', 'unused', dockerRegistryUrl
-    }
-  }
-}
-
-
-task downloadBaseImage(type:com.github.skhatri.s3aws.plugin.S3DownloadTask) {
-  bucket = "o2-delivery/${gitBranch}/docker"
-  key = "${lazyProperty('baseImage')}.tgz"
-  saveTo = file("${dockerFile.parentFile}/${lazyProperty('baseImage')}.tgz")
-}
-
-task loadBaseDockerImage(dependsOn: downloadBaseImage) {
-
-  doLast {
-    exec {
-      commandLine 'docker', 'load', '-i', "${dockerFile.parentFile}/${lazyProperty('baseImage')}.tgz"
-    }
-  }
-}
-
-//task createDockerfile(type: Dockerfile, dependsOn: loadBaseDockerImage){
-task createDockerfile(type: Dockerfile){
-
-  def statementOverride = lazyProperty("dockerStatementsOverride");
-
-  def jarName = "${project.name}-${buildVersion}-${buildVersionTag}.jar"
-  destFile = dockerFile
-
-  if(statementOverride)
-  {
-    statementOverride.each{
-      instruction it
-    }
-  }
-  else
-  {
-    from "${lazyProperty('dockerNamespaceUrl')}${lazyProperty('baseImage')}:${lazyProperty('dockerAppTag')}"
+    from "${ project.dockerNamespaceUrl }${ project.ext.baseImage }:${ project.dockerAppTag }"
     maintainer "DigitalGlobe-RadiantBlue"
     environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
     environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
@@ -287,100 +105,4 @@ task createDockerfile(type: Dockerfile){
     user '1001'
     workingDir '/usr/share/omar'
     defaultCommand 'java', '-server', '-Xms256m', '-Xmx1024m', '-Djava.awt.headless=true', '-XX:+CMSClassUnloadingEnabled', '-XX:+UseGCOverheadLimit', '-Djava.security.egd=file:/dev/./urandom', '-jar', jarName
-  }
-}
-
-task buildDockerImage(type: DockerBuildImage) {
-  dependsOn createDockerfile
-  dependsOn logIn
-  inputDir = createDockerfile.destFile.parentFile
-  tag = "${image}"
-}
-
-task tagDockerImage(type: DockerTagImage, dependsOn: buildDockerImage){
-  imageId "${image}"
-  tag "${dockerAppTag}"
-  repository  "${ dockerNamespaceUrl }${ project.name }"
-}
-
-
-task pushDockerImage( type: DockerPushImage ){
-
-  dependsOn tagDockerImage
-
-  imageName "${ dockerNamespaceUrl }${ image }"
-}
-
-task saveDockerImage(dependsOn: pushDockerImage) {
-    doLast {
-        exec {
-            commandLine 'docker', 'save', image, '-o', "${ dockerFile.parentFile }/${ project.name }.tgz"
-        }
-    }
-}
-
-// Uses the S3 plugin to push the .tgz file to the ossimlabs
-task dockerImageToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: saveDockerImage ) {
-    bucket = "o2-delivery/${ gitBranch }/docker"
-    key = "${ imageTgz }"
-    file = ("${ dockerFile.parentFile }/${ imageTgz }").toString()
-}
-
-task dockerFileToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: createDockerfile ) {
-    bucket = "o2-delivery/${ gitBranch }/docker"
-    key = "${ project.name }-Dockerfile"
-    file = createDockerfile.destFile.toString()
-}
-
-task jarFileToS3( type: com.github.skhatri.s3aws.plugin.S3UploadTask ) {
-    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
-    bucket = "o2-delivery/${ gitBranch }/jars"
-    key = "${ jarName }"
-    file = "build/libs/${ jarName }"
-}
-
-task doAll() {
-  dependsOn dockerImageToS3
-  dependsOn dockerFileToS3
-
-    doLast {
-        exec {
-            commandLine 'docker', 'rmi', "-f", "${ dockerNamespaceUrl }${ image }"
-        }
-        exec {
-            commandLine 'docker', 'rmi', "-f", image
-        }
-    }
-}
-
-artifactory {
-    contextUrl = "${ artifactoryContextUrl }"   //The base Artifactory URL if not overridden by the publisher/resolver
-    publish {
-        repository {
-            repoKey = "omar-local"
-            username = "${ artifactoryUser }"
-            password = "${ artifactoryPassword }"
-            maven = true
-        }
-        defaults{
-            publications( "mavenJava" )
-        }
-    }
-    resolve {
-        repository {
-            repoKey = "omar-local"
-            username = "${ artifactoryUser }"
-            password = "${ artifactoryPassword }"
-            maven = true
-        }
-    }
-}
-
-if( fullAssemble ) {
-  artifactoryPublish.dependsOn.add( "assemble" )
-  jarFileToS3.dependsOn.add( "assemble" )
-}
-
-if( hasJar ) {
-  doAll.dependsOn.add( "jarFileToS3" )
 }
