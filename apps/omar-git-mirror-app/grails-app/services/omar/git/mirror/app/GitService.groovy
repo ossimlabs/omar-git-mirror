@@ -13,7 +13,6 @@ class GitService {
     def mirror( json ) {
         def repository = json.repository
 
-        def cloneUrl = repository?.clone_url
         def repoName = repository?.name
         def sshUrl = repository?.ssh_url
 
@@ -26,7 +25,7 @@ class GitService {
         // if the repo directory doesn't exist
         if ( !repoDir.exists() ) {
             // clone the repo
-            def cloneCommand = "git clone --mirror ${ repository.private == "true" ? sshUrl : cloneUrl }"
+            def cloneCommand = "git clone --mirror ${ sshUrl }"
             println cloneCommand
             def cloneProcess = cloneCommand.execute()
             cloneProcess.waitFor()
