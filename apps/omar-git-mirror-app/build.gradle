@@ -265,10 +265,10 @@ task createDockerfile( type: Dockerfile ) {
 
         runCommand "yum -y install git"
 
-runCommand "useradd -ms /bin/bash omar"
+        runCommand "useradd -ms /bin/bash omar"
 
         runCommand "mkdir /.ssh"
-        runCommand "chown omar /.ssh"
+        //runCommand "chown omar /.ssh"
 
 
 
