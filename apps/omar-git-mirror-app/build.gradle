@@ -28,6 +28,11 @@ buildscript {
     }
 }
 
+
+apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
+apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
+
 group "io.ossim.omar.apps"
 
 apply plugin:"eclipse"
