@@ -80,19 +80,9 @@ task saveDockerImage(dependsOn: pushDockerImage, overwrite:true) {
   }
 }
 
-task pushDocsToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, overwrite: true) {
-    exec {
-        commandLine "aws", "s3", "sync", "../../site", "s3://ossimlabs/omar-docs-${ System.getenv( 'OSSIM_GIT_BRANCH' ) }"
-    }
-
-    bucket = "o2-delivery/dev/o2-install-guide"
-    key = "docs.tgz"
-    file = "../../docs.tgz"
-}
 
 // Uses the S3 plugin to push the .tgz file to the ossimlabs
 task dockerImageToS3(type: com.github.skhatri.s3aws.plugin.S3UploadTask, dependsOn: saveDockerImage, overwrite:true) {
-  dependsOn pushDocsToS3
 
   bucket = 'o2-delivery/dev/docker'
   key = "${imageTgz}"
