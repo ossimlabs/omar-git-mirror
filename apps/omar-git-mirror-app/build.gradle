@@ -4,11 +4,6 @@ import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 
-assets {
-    minifyJs = true
-    minifyCss = true
-}
-
 buildscript {
     ext {
         artifactoryContextUrl = "https://artifacts.radiantbluecloud.com/artifactory"
@@ -49,6 +44,17 @@ apply plugin: "maven-publish"
 apply plugin: "org.grails.grails-web"
 apply plugin: "org.grails.grails-gsp"
 
+ext {
+    grailsVersion = project.grailsVersion
+    gradleWrapperVersion = project.gradleWrapperVersion
+}
+
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+    maven { url "${ ossimMavenProxy }" }
+}
+
 dependencyManagement {
     imports {
         mavenBom "org.grails:grails-bom:$grailsVersion"
@@ -82,9 +88,9 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-eureka"
 }
 
-ext {
-    grailsVersion = project.grailsVersion
-    gradleWrapperVersion = project.gradleWrapperVersion
+assets {
+    minifyJs = true
+    minifyCss = true
 }
 
 publishing {
@@ -95,11 +101,7 @@ publishing {
     }
 }
 
-repositories {
-    mavenLocal()
-    maven { url "https://repo.grails.org/grails/core" }
-    maven { url "${ ossimMavenProxy }" }
-}
+
 
 def lazyProperty(final String propertyName) {
     // Get property.
