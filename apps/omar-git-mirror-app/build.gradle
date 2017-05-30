@@ -4,6 +4,11 @@ import com.bmuschko.gradle.docker.tasks.image.DockerTagImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 
+assets {
+    minifyJs = true
+    minifyCss = true
+}
+
 buildscript {
     ext {
         artifactoryContextUrl = "https://artifacts.radiantbluecloud.com/artifactory"
@@ -44,6 +49,14 @@ apply plugin: "maven-publish"
 apply plugin: "org.grails.grails-web"
 apply plugin: "org.grails.grails-gsp"
 
+dependencyManagement {
+    imports {
+        mavenBom "org.grails:grails-bom:$grailsVersion"
+        mavenBom "org.springframework.cloud:spring-cloud-starter-parent:Brixton.SR7"
+    }
+    applyMavenExclusions false
+}
+
 dependencies {
     compile "org.springframework.boot:spring-boot-starter-logging"
     compile "org.springframework.boot:spring-boot-autoconfigure"
@@ -67,6 +80,19 @@ dependencies {
 
     compile "org.springframework.cloud:spring-cloud-starter-config"
     compile "org.springframework.cloud:spring-cloud-starter-eureka"
+}
+
+ext {
+    grailsVersion = project.grailsVersion
+    gradleWrapperVersion = project.gradleWrapperVersion
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
 }
 
 repositories {
@@ -361,79 +387,3 @@ if( hasJar )
 {
   doAll.dependsOn.add("jarFileToS3")
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//
-//ext {
-//    grailsVersion = project.grailsVersion
-//    gradleWrapperVersion = project.gradleWrapperVersion
-//}
-//
-
-//
-//dependencyManagement {
-//    imports {
-//        mavenBom "org.grails:grails-bom:$grailsVersion"
-//        mavenBom "org.springframework.cloud:spring-cloud-starter-parent:Brixton.SR7"
-//    }
-//    applyMavenExclusions false
-//}
-//
-
-//
-//assets {
-//    minifyJs = true
-//    minifyCss = true
-//}
-//
-//publishing {
-//    publications {
-//        mavenJava(MavenPublication) {
-//            from components.java
-//        }
-//    }
-//}
-//
-//task createDockerfile( overwrite: true ) {
-//    //def destFile = project.file( 'docker/Dockerfile' )
-//
-//    def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
-//
-//    from "${ project.dockerNamespaceUrl }${ project.ext.baseImage }:${ project.dockerAppTag }"
-//    maintainer "DigitalGlobe-RadiantBlue"
-//    environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
-//    environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
-//    runCommand "mkdir /.ssh"
-//    runCommand "mkdir /usr/share/omar"
-//    copyFile jarName, '/usr/share/omar'
-//    runCommand 'chown -R 1001:0 /usr/share/omar'
-//    runCommand 'chown 1001:0 /usr/share/omar'
-//    runCommand 'chmod -R g+rw /usr/share/omar'
-//    runCommand 'find $HOME -type d -exec chmod g+x {} +'
-//    user '1001'
-//    workingDir '/usr/share/omar'
-//    instruction "expose 8080"
-//    defaultCommand 'java', '-server', '-Xms256m', '-Xmx1024m', '-Djava.awt.headless=true', '-XX:+CMSClassUnloadingEnabled', '-XX:+UseGCOverheadLimit', '-Djava.security.egd=file:/dev/./urandom', '-jar', jarName
-//}
