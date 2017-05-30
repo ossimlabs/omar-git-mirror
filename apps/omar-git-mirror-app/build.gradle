@@ -265,22 +265,22 @@ task createDockerfile( type: Dockerfile ) {
 
         runCommand "yum -y install git"
 
-runCommand "useradd -ms /bin/bash 1001"
+runCommand "useradd -ms /bin/bash omar"
 
         runCommand "mkdir /.ssh"
-        runCommand "chown 1001 /.ssh"
+        runCommand "chown omar /.ssh"
 
 
 
         runCommand "mkdir /usr/share/omar"
         copyFile jarName, "/usr/share/omar"
-        runCommand "chown -R 1001 /usr/share/omar"
-        runCommand "chown 1001 /usr/share/omar"
+        runCommand "chown -R omar /usr/share/omar"
+        runCommand "chown omar /usr/share/omar"
         runCommand "chmod -R g+rw /usr/share/omar"
         runCommand 'find $HOME -type d -exec chmod g+x {} +'
 
 
-        user "1001"
+        user "omar"
         workingDir "/usr/share/omar"
         instruction "expose 8080"
         defaultCommand "java", "-server", "-Xms256m", "-Xmx1024m", "-Djava.awt.headless=true", "-XX:+CMSClassUnloadingEnabled", "-XX:+UseGCOverheadLimit", "-Djava.security.egd=file:/dev/./urandom", "-jar", jarName
