@@ -16,8 +16,8 @@ class GitService {
         def repoName = repository?.name
         def sshUrl = repository?.ssh_url
 
-        if ( !cloneUrl || !repoName || !sshUrl ) {
-            return "No clone URL, repository name or SSH URL."
+        if ( !repoName || !sshUrl ) {
+            return "No repository name or SSH URL."
         }
 
         def repoDir = new File( "${ repoName }.git" )
