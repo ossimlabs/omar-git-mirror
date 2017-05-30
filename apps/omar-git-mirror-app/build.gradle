@@ -198,7 +198,7 @@ task createDockerfile(type: Dockerfile){
   }
   else
   {
-      from "${ project.dockerNamespaceUrl }${ project.ext.baseImage }:${ project.dockerAppTag }"
+      from "${lazyProperty('dockerNamespaceUrl')}${lazyProperty('baseImage')}:${lazyProperty('dockerAppTag')}"
       maintainer "DigitalGlobe-RadiantBlue"
       environmentVariable "SPRING_CLOUD_CONFIG_ENABLED","true"
       environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
