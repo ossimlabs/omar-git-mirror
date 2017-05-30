@@ -90,7 +90,7 @@ publishing {
 }
 
 task createDockerfile( overwrite: true ) {
-    destFile = project.file( 'docker/Dockerfile' )
+    //def destFile = project.file( 'docker/Dockerfile' )
 
     def jarName = "${ project.name }-${ buildVersion }-${ buildVersionTag }.jar"
 
