@@ -69,6 +69,12 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-eureka"
 }
 
+repositories {
+    mavenLocal()
+    maven { url "https://repo.grails.org/grails/core" }
+    maven { url "${ ossimMavenProxy }" }
+}
+
 def lazyProperty(final String propertyName) {
     // Get property.
     def result
@@ -385,11 +391,7 @@ if( hasJar )
 //    gradleWrapperVersion = project.gradleWrapperVersion
 //}
 //
-//repositories {
-//    mavenLocal()
-//    maven { url "${ ossimMavenProxy }" }
-//    maven { url "https://repo.grails.org/grails/core" }
-//}
+
 //
 //dependencyManagement {
 //    imports {
