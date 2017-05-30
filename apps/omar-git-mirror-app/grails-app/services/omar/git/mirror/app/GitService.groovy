@@ -15,36 +15,37 @@ class GitService {
         def repoName = json.repository?.name
 
         if ( !cloneUrl || !repoName ) {
-            return "No repository name or clone URL."
-        }
-        if ( grailsApplication.config.repos[ repoName ].cloneUrl != cloneUrl ) {
-            return "${ repoName } is not one of the repositories being mirrored."
+            return "No clone URL or repository name."
         }
 
         def repoDir = new File( "${ repoName }.git" )
 
-        // if the repo directory doesn't exists
+        // if the repo directory doesn't exist
         if ( !repoDir.exists() ) {
             // clone the repo
             def cloneCommand = "git clone --mirror ${ cloneUrl }"
+            println cloneCommand
             def cloneProcess = cloneCommand.execute()
             cloneProcess.waitFor()
 
             // change the remote push url for the origin
-            //def setUrlCommand = "git set-url --push origin ${ mirrorRepoUrl }/${ repoName }.git"
-            //def setUrlProcess = setUrlCommand.execute( null, repoDir )
-            //setUrlProcess.waitFor()
+            def setUrlCommand = "git set-url --push origin ${ grailsAppplication.config.repoMirrorUrl }/${ repoName }.git"
+            println setUrlCommand
+            def setUrlProcess = setUrlCommand.execute( null, repoDir )
+            setUrlProcess.waitFor()
         }
 
         // fetch updates
-        //def fetchCommand = "git fetch -p origin"
-        //def fetchProcess = fetchCommand.execute( null, repoDir)
-        //fetchCommand.waitFor()
+        def fetchCommand = "git fetch -p origin"
+        println fetchCommand
+        def fetchProcess = fetchCommand.execute( null, repoDir)
+        fetchCommand.waitFor()
 
         // push updates
-        //def pushCommand = "git push --mirror"
-        //def pushProcess = pushCommand.execute(
-        //pushProcess.waitFor())
+        def pushCommand = "git push --mirror"
+        println pushCommand
+        def pushProcess = pushCommand.execute( null, repoDir)
+        pushProcess.waitFor()
 
 
         return json
