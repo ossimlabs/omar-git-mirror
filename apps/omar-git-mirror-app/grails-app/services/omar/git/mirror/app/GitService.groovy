@@ -29,7 +29,7 @@ class GitService {
             cloneProcess.waitFor()
 
             // change the remote push url for the origin
-            def setUrlCommand = "git set-url --push origin ${ grailsApplication.config.repoMirrorUrl }/${ repoName }.git"
+            def setUrlCommand = "git remote set-url --push origin ${ grailsApplication.config.repoMirrorUrl }/${ repoName }.git"
             println setUrlCommand
             def setUrlProcess = setUrlCommand.execute( null, repoDir )
             setUrlProcess.waitFor()
@@ -39,7 +39,7 @@ class GitService {
         def fetchCommand = "git fetch -p origin"
         println fetchCommand
         def fetchProcess = fetchCommand.execute( null, repoDir)
-        fetchCommand.waitFor()
+        fetchProcess.waitFor()
 
         // push updates
         def pushCommand = "git push --mirror"
