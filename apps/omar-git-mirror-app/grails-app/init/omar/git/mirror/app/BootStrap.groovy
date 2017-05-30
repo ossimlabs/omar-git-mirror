@@ -25,11 +25,10 @@ class BootStrap {
 
         def config = new File( "${ sshDirectory }/config" )
         if ( !config.exists() ) {
-            config.append( "Host github.com" )
-            config.append( "StrictHostKeyChecking no" )
-            config.append( "Host ${ grailsApplication.config.knownHost }" )
-            config.append( "StrictHostKeyChecking no" )
-
+            config.append( "Host github.com\n" )
+            config.append( "StrictHostKeyChecking no\n" )
+            config.append( "Host ${ grailsApplication.config.knownHost }\n" )
+            config.append( "StrictHostKeyChecking no\n" )
         }
     }
     def destroy = {
