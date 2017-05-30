@@ -25,6 +25,8 @@ buildscript {
    }
 }
 
+apply plugin: "java"
+apply plugin: "maven-publish"
 apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
 apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
