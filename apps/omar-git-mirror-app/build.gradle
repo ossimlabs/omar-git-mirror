@@ -8,6 +8,8 @@ buildscript {
     ext {
         grailsVersion = project.grailsVersion
         baseImage = "omar-base"
+        artifactoryContextUrl="https://artifacts.radiantbluecloud.com/artifactory"
+        ossimMavenProxy="${artifactoryContextUrl}/ossim-deps"
     }
     if( System.env.OMAR_COMMON_PROPERTIES ) {
         apply from: System.env.OMAR_COMMON_PROPERTIES
@@ -23,6 +25,11 @@ buildscript {
         classpath "org.grails.plugins:hibernate4:5.0.10"
     }
 }
+
+
+apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+apply plugin: com.github.skhatri.s3aws.plugin.S3Plugin
+apply plugin: org.jfrog.gradle.plugin.artifactory.ArtifactoryPlugin
 
 group "io.ossim.omar.apps"
 
