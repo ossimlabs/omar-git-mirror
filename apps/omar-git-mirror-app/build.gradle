@@ -264,7 +264,6 @@ task createDockerfile( type: Dockerfile ) {
         environmentVariable "SPRING_CLOUD_DISCOVERY_ENABLED","true"
 
         runCommand "yum -y install git"
-        runCommand "yum -y install whoami"
 
         runCommand "mkdir /.ssh"
         runCommand "chown 1001:0 /.ssh"
@@ -278,7 +277,7 @@ task createDockerfile( type: Dockerfile ) {
 
         runCommand "useradd -ms /bin/bash 1001"
 
-        user "1001"
+        //user "1001"
         workingDir "/usr/share/omar"
         instruction "expose 8080"
         defaultCommand "java", "-server", "-Xms256m", "-Xmx1024m", "-Djava.awt.headless=true", "-XX:+CMSClassUnloadingEnabled", "-XX:+UseGCOverheadLimit", "-Djava.security.egd=file:/dev/./urandom", "-jar", jarName
