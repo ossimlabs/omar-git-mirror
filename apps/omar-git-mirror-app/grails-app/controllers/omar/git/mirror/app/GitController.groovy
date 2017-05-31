@@ -19,8 +19,10 @@ class GitController {
 		def response = []
 		grailsApplication.config.repositories.each {
 			response << gitService.mirror([
-				name: it.name,
-				ssh_url: it.sshUrl
+				repository: [
+					name: it.name,
+					ssh_url: it.sshUrl
+				]
 			])
 		}
 
