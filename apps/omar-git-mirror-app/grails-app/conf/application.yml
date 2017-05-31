@@ -1,3 +1,18 @@
+knownHosts:
+  - butbucket.di2e.net
+  - github.com
+
+repoMirrorUrl: https://kevin.naquin@bitbucket.di2e.net/scm/oc2s
+
+sshKey: |
+ -----BEGIN RSA PRIVATE KEY-----
+ ...
+ ...
+ ...
+ -----END RSA PRIVATE KEY-----
+
+sshKeyPublic: ssh-rsa ...
+
 server:
   contextPath:
   port: 8080
