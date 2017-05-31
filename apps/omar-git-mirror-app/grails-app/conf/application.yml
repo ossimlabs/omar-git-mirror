@@ -4,6 +4,10 @@ knownHosts:
 
 repoMirrorUrl: https://kevin.naquin@bitbucket.di2e.net/scm/oc2s
 
+repositories:
+  - name: omar-git-mirror
+    sshUrl: git@github.com:ossimlabs/omar-git-mirror.git
+
 sshKey: |
  -----BEGIN RSA PRIVATE KEY-----
  ...
