@@ -16,3 +16,6 @@ These steps are needed when a new repository is to be mirrored.
 3. Add the following webhook to the GitHub repository.
     URL: http://omar-dev.ossim.io/omar-git-mirror
     Content Type: application/json
+
+## API
+Although a list of repositories is not necessary in the configuration to mirror a repository, the `/git/mirrorRepos` endpoint will cycle through any repositories listed in the `application.yml` file and execute the mirror service on each of them.
