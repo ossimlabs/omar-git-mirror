@@ -25,7 +25,7 @@ class BootStrap {
 
         def config = new File( "${ sshDirectory }/config" )
         if ( !config.exists() ) {
-            grailsApplication.config.knownHosts.each {
+            grailsApplication.config.knownHosts.split(" ").each {
                 config.append( "Host ${ it }\n" )
                 config.append( "StrictHostKeyChecking no\n" )
             }
