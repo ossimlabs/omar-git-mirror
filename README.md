@@ -14,7 +14,7 @@ These steps are needed when a new repository is to be mirrored.
 1. Create a new repository in DI2E's BitBucket with the same name as the one to be mirrored.
 2. Ensure that the GitHub user with the correct access key (see section above) has access to the repository.
 3. Add the following webhook to the GitHub repository.
-    URL: http://omar-dev.ossim.io/omar-git-mirror
+    URL: http://omar-rel.ossim.io/omar-git-mirror
     Content Type: application/json
 
 ## API
