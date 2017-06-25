@@ -13,7 +13,7 @@ root(ERROR, ['STDOUT'])
 def targetDir = BuildSettings.TARGET_DIR
 if (!Environment.isDevelopmentMode()) { // && targetDir) {
     appender("FULL_STACKTRACE", FileAppender) {
-        file = "stacktrace.log" //"${targetDir}/stacktrace.log"
+        file = "stacktrace.log" // "${targetDir}/stacktrace.log"
         append = true
         encoder(PatternLayoutEncoder) {
             pattern = "%level %logger - %msg%n"
