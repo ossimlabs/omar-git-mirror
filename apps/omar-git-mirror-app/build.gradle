@@ -23,7 +23,7 @@ buildscript {
 
     dependencies {
         classpath "com.bertramlabs.plugins:asset-pipeline-gradle:2.8.2"
-        classpath "com.bmuschko:gradle-docker-plugin:3.0.6"
+        classpath "com.bmuschko:gradle-docker-plugin:3.0.7"
         classpath "com.github.skhatri:gradle-s3-plugin:1.0.4"
         classpath "org.grails:grails-gradle-plugin:$grailsVersion"
         classpath "org.grails.plugins:hibernate4:5.0.10"
