@@ -23,6 +23,9 @@ buildscript {
             "CMD java -Xms256m -Xmx1024m -Dspring.profiles.active=production -Djava.security.egd=file:/dev/./urandom -Dserver.contextPath=/omar-config-server -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
         ]}
     }
+    if ( System.env.OMAR_COMMON_PROPERTIES ) {
+        apply from: System.env.OMAR_COMMON_PROPERTIES
+    }
 
     repositories {
         mavenLocal()
