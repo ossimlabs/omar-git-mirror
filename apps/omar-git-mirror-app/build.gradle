@@ -6,7 +6,7 @@ import com.bmuschko.gradle.docker.tasks.image.DockerRemoveImage
 
 buildscript {
     ext {
-        artifactoryContextUrl = "https://artifacts.radiantbluecloud.com/artifactory"
+        artifactoryContextUrl = "https://artifactory.ossim.io/artifactory"
         baseImage = "omar-base"
         grailsVersion = project.grailsVersion
         ossimMavenProxy = "${ artifactoryContextUrl }/ossim-deps"
