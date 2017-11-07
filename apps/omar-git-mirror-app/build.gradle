@@ -26,6 +26,7 @@ buildscript {
     }
     repositories {
         mavenLocal()
+        maven { url "${ossimMavenProxy}" }
         maven { url "https://repo.grails.org/grails/core" }
     }
     dependencies {
@@ -101,7 +102,7 @@ dependencies {
     compile "org.springframework.cloud:spring-cloud-starter-config"
     compile "org.springframework.cloud:spring-cloud-starter-eureka"
     compile "org.springframework.cloud:spring-cloud-starter-zipkin"
-    
+
     compile "de.codecentric:spring-boot-admin-starter-client:1.5.4"
 }
 
