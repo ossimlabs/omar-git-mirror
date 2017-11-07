@@ -18,7 +18,7 @@ buildscript {
             "WORKDIR /home/omar",
             "RUN mkdir .ssh",
             "EXPOSE 8080",
-            "CMD java -Xms256m -Xmx1024m -Djava.security.egd=file:/dev/./urandom -jar $HOME/${project.name}-${buildVersion}-${buildVersionTag}.jar"
+            "CMD java -Xms256m -Xmx1024m -Djava.security.egd=file:/dev/./urandom -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
         ]}
     }
     if( System.env.OMAR_COMMON_PROPERTIES ) {
