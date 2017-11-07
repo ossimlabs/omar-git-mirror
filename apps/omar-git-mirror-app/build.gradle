@@ -36,7 +36,7 @@ buildscript {
     }
 }
 
-group "omar.git.mirror.app"
+group "io.ossim.omar.apps"
 
 apply plugin:"eclipse"
 apply plugin:"idea"
