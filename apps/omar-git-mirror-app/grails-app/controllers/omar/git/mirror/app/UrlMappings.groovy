@@ -9,10 +9,7 @@ class UrlMappings {
             }
         }
 
-        "/" {
-        	action = "index"
-			controller = "git"
-		}
+        "/"(view:"/index")
         "500"(view:'/error')
         "404"(view:'/notFound')
     }
