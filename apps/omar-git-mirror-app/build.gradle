@@ -18,7 +18,7 @@ buildscript {
             "WORKDIR /home/omar",
             "RUN mkdir .ssh",
             "EXPOSE 8080",
-            "CMD java -Xms256m -Xmx1024m -Djava.security.egd=file:/dev/./urandom -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
+            "CMD java -server -Xms256m -Xmx1024m -Djava.awt.headless=true -XX:+CMSClassUnloadingEnabled -XX:+UseGCOverheadLimit -XX:+UnlockExperimentalVMOptions  -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Djava.security.egd=file:/dev/./urandom -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
         ]}
     }
     if( System.env.OMAR_COMMON_PROPERTIES ) {
