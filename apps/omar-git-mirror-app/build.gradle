@@ -18,8 +18,8 @@ buildscript {
             "WORKDIR /home/omar",
             "RUN mkdir .ssh",
             "EXPOSE 8080",
-            "CMD java -server -Xms256m -Xmx1024m -Djava.awt.headless=true -XX:+CMSClassUnloadingEnabled -XX:+UseGCOverheadLimit -XX:+UnlockExperimentalVMOptions  -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Djava.security.egd=file:/dev/./urandom -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
-        ]}
+            "CMD java -server -Xms256m -Xmx1024m -Djava.awt.headless=true -XX:+CMSClassUnloadingEnabled -XX:+UseGCOverheadLimit -XX:+UnlockExperimentalVMOptions  -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=1 -Djava.security.egd=file:/dev/./urandom -Dserver.contextPath=/omar-git-mirror -Dspring.profiles.active=rel -jar /home/omar/${project.name}-${buildVersion}-${buildVersionTag}.jar"
+        ]} 
     }
     if( System.env.OMAR_COMMON_PROPERTIES ) {
         apply from: System.env.OMAR_COMMON_PROPERTIES
@@ -99,7 +99,7 @@ dependencies {
     testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
 
     compile "org.springframework.cloud:spring-cloud-starter-config"
-    //compile "org.springframework.cloud:spring-cloud-starter-eureka"
+    compile "org.springframework.cloud:spring-cloud-starter-eureka"
     //compile "org.springframework.cloud:spring-cloud-starter-zipkin"
 
     compile "de.codecentric:spring-boot-admin-starter-client:1.5.4"
