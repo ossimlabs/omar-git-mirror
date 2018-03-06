@@ -1,0 +1,11 @@
+def final O2_DEV_HOME = System.getenv('O2_DEV_HOME')
+
+if ( O2_DEV_HOME ) {
+
+   include 'omar-git-mirror-app',
+	   'omar-core-plugin'
+
+   project(':omar-git-mirror-app').projectDir = "${O2_DEV_HOME}/omar-git-mirror/apps/omar-git-mirror-app" as File
+   project(':omar-core-plugin').projectDir = "${O2_DEV_HOME}/omar-core/plugins/omar-core-plugin" as File
+
+}
